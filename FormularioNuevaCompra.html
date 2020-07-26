@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Metric</title>
+
+    <!--Boostrap cdn-->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!---------------------------------------------------->
+    <!--Barra de navegación-->
+    <!---------------------------------------------------->
+
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#">Gold Metrict</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+            aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarColor01">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="NuevoCliente.html">Nuevo cliente</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="ListadoClientes.html">Listado de clientes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="NuevaCompra.html">Nueva compra</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="ListaCompras.html">Listado de compras</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="Documentos.html">Consulta documentos</a>
+                </li>
+            </ul>
+
+        </div>
+    </nav>
+
+
+
+    <!---------------------------------------------------->
+    <!--Formulario-->
+    <!---------------------------------------------------->
+       <!--
+    <div class="container">
+
+ 
+
+        <div id="formulario-compra" class="row">
+
+
+            
+            <div class="col-md-4 mt-4 p-1">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Foto</h4>
+                    </div>
+                    <div class="card-body ">
+                    </div>
+                </div>
+
+                <div style="height: 30px;">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Huella</h4>
+                            </div>
+                            <div class="card-body">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-info  col-md-12 p-1 mt-5">Tamaño/Resolución</button>
+                        <button type="submit" class="btn btn-info  col-md-12 p-1 mt-5">Captura Imagen</button>
+                    </div>
+                </div>
+
+
+                <div class="form-check mt-4">
+                    <label class="form-check-label">
+                        <input class="form-check-input" type="checkbox" value="" checked="">
+                        Imprimir certificado de origen
+                    </label>
+                </div>
+
+                <div class="form-check mt-4">
+                    <label class="form-check-label">
+                        <input class="form-check-input" type="checkbox" value="" checked="">
+                        Imprimir documento equivalente
+                    </label>
+                </div>
+
+                
+           
+
+            </div>
+
+ -->
+
+
+        <div class="container">
+
+            <div class="row mt-5">
+
+                <div class="card ml-4 col-md-2.5">
+                    <div class="card-body">
+                        <strong>Cupo nacional: </strong> 40
+                    </div>
+                </div>
+
+                <div class="card ml-4 col-md-2.5">
+                    <div class="card-body">
+                        <strong>Cupo mensual: </strong> 40
+                    </div>
+                </div>
+
+                <div class="card ml-4 col-md-2.5">
+                    <div class="card-body">
+                        <strong>Cupo empresa: </strong> 40
+                    </div>
+                </div>
+
+            </div>
+
+            <form>
+
+                <div class="row m-2">
+                    <div class="form-group col-md-6 mt-2">
+                        <label for="cedula">Cédula</label>
+                        <input type="number" class="form-control" id="cedula" aria-describedby="cedula"
+                            placeholder="Ingresa la cedula">
+                    </div>
+
+                    <div class="form-group col-md-6  mt-2">
+                        <label for="nombre">Nombre Completo</label>
+                        <input type="text" class="form-control" id="nombre" aria-describedby="nombre">
+                    </div>
+
+                </div>
+
+
+
+                <div class="row m-2">
+
+                    <div class="form-group col-md-3">
+                        <label for="ley">Ley</label>
+                        <input type="text" class="form-control" id="ley" aria-describedby="ley">
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label for="vr-gramo">Vr Gramo</label>
+                        <input type="text" class="form-control" id="vr-gramo" aria-describedby="vr-gramo">
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <label for="gramo">Gramos</label>
+                        <input type="text" class="form-control" id="gramo" aria-describedby="gramo">
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <!--
+                        <label for="total">Total</label>
+                        <input type="text" class="form-control" id="total" aria-describedby="total">
+                        -->
+                    </div>
+
+                </div>
+
+
+                <div class="row m-4 p-4 ">
+
+                    <button type="submit" class="btn btn-success  col-md-3 p-4">Guardar</button>
+                    <button type="submit" class="btn btn-secondary col-md-3 ml-3">Cancelar</button>
+                </div>
+
+                <div class="card ml-4 col-md-2.5">
+
+                    <div class="card-header">
+                        <h4>Esta compra esta siendo agrupada con la siguiente información: </h4>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row">
+                            <div class="col-md-8">
+
+                                <ul>
+                                    <li><strong> Fecha: </strong> 2020-20-20</li>
+                                </ul>
+
+                                <ul>
+                                    <li><strong> Empresa: </strong>
+
+                                        <div class="form-group col-md-5 mt-2">
+                                            <select class="form-control" id="empresa">
+                                                <option>Empresa 1</option>
+                                                <option>Empresa 2</option>
+                                                <option>Empresa 3</option>
+                                                <option>Empresa 4</option>
+                                                <option>Empresa 5</option>
+                                            </select>
+                                        </div>
+                                    </li>
+
+                                </ul>
+
+                                <ul>
+                                    <li><strong> Nota: </strong> Nota de prueba</li>
+                                </ul>
+
+                                <ul>
+                                    <li><strong> Gramos: </strong> 522</li>
+                                </ul>
+
+                            </div>
+
+                            <div class="finalizar-compra">
+                                
+                                        <a href="Documentos.html" class="btn btn-success col-md-12 mt-5">Finalizar compra</a>
+                                        <a href="DetalleCompra.html" class="btn btn-info col-md-12 mt-5">Ver</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+
+            </form>
+
+        </div>
+
+    </div>
+    </div>
+
+
+</body>
+
+</html>

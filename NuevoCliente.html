@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Metric</title>
+
+    <!--Boostrap cdn-->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!---------------------------------------------------->
+    <!--Barra de navegación-->
+    <!---------------------------------------------------->
+
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#">Gold Metrict</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+            aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarColor01">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="NuevoCliente.html">Nuevo cliente</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="ListadoClientes.html">Listado de clientes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="NuevaCompra.html">Nueva compra</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="ListaCompras.html">Listado de compras</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="Documentos.html">Consulta documentos</a>
+                </li>
+            </ul>
+
+        </div>
+    </nav>
+
+
+
+    <!---------------------------------------------------->
+    <!--Formulario-->
+    <!---------------------------------------------------->
+
+    <div class="container center_div">
+
+        <form class="formulario row pt-5 ml-5 ">
+
+            <div class="form-group col-md-5 ">
+                <label for="fecha-na" class="col-sm-2 col-form-label">Fecha</label>
+                <input type="date" id="fecha-na" class="form-control">
+            </div>
+
+            <div class="form-group col-md-5">
+                <!--
+                <label for="empresa">Empresa</label>
+                <select class="form-control" id="empresa">
+                    <option>Empresa 1</option>
+                    <option>Empresa 2</option>
+                    <option>Empresa 3</option>
+                    <option>Empresa 4</option>
+                    <option>Empresa 5</option>
+                </select>
+                -->
+            </div>
+
+            <div class="form-group col-md-4">
+                <label for="cedula">Cédula</label>
+                <input type="number" class="form-control" id="cedula" aria-describedby="cedula"
+                    placeholder="Ingresa la cedula">
+            </div>
+
+            <div class="form-group col-md-1">
+                <label for="dv">DV</label>
+                <input type="text" class="form-control" id="nombre" aria-describedby="nombre">
+            </div>
+
+            <div class="form-group col-md-2 ">
+                <label for="fecha-exp" class="col-cm-4 col-form-label">Fecha de expedición</label>
+                <input type="date" id="fecha-exp" class="form-control">
+            </div>
+
+            <div class="form-group col-md-3 ">
+                <label for="ciudad-exp" class="col-cm-4 col-form-label">Ciudad de expedición</label>
+                <input type="text" id="ciudad-exp" class="form-control">
+            </div>
+
+            <div class="form-group col-md-5">
+                <label for="nombre">Nombre</label>
+                <input type="text" class="form-control" id="nombre" aria-describedby="nombre">
+            </div>
+
+            <div class="form-group col-md-5">
+                <label for="apellidos">Apellidos</label>
+                <input type="text" class="form-control" id="apellidos" aria-describedby="apellidos">
+            </div>
+
+            <div class="form-group col-md-5">
+                <label for="cedula">Telefono</label>
+                <input type="number" class="form-control" id="telefono" aria-describedby="telefono">
+            </div>
+
+            <div class="form-group col-md-5">
+                <label for="apellidos">Direccion</label>
+                <input type="text" class="form-control" id="direccion" aria-describedby="direccion">
+            </div>
+
+            <div class="form-group col-md-5">
+                <label for="municipio">Municipio RUCON</label>
+                <select class="form-control" id="municipio">
+                    <option>Municipio 1</option>
+                    <option>Municipio 2</option>
+                    <option>Municipio 3</option>
+                    <option>Municipio 4</option>
+                    <option>Municipio 5</option>
+                </select>
+            </div>
+
+            <div class="form-group col-md-5">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" aria-describedby="email">
+            </div>
+
+            <button type="submit" class="btn btn-success  col-md-5">Guardar</button>
+            <button type="submit" class="btn btn-secondary col-md-5 ml-3">Cancelar</button>
+
+        </form>
+            
+    </div>
+
+    <hr class="mt-5">
+
+    <footer class="section " >
+        <div class="container col-md-7">
+
+    
+
+            <dl class="contact-list ml-5 mt-4">
+             
+                <dd><a href="mailto:#"></a>&copy; Todos los derechos reservados</a></dd>
+            </dl>
+            
+            </dl>
+        </div>
+
+    </footer>
+
+</body>
+
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Metric</title>
+
+    <!--Boostrap cdn-->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!---------------------------------------------------->
+    <!--Barra de navegación-->
+    <!---------------------------------------------------->
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#">Gold Metrict</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+            aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarColor01">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="NuevoCliente.html">Nuevo cliente</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="ListadoClientes.html">Listado de clientes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="NuevaCompra.html">Nueva compra</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="ListaCompras.html">Listado de compras</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="Documentos.html">Consulta documentos</a>
+                </li>
+            </ul>
+
+        </div>
+    </nav>
+
+
+
+    <!---------------------------------------------------->
+    <!--Formulario compra-->
+    <!---------------------------------------------------->
+
+    <div class="container center_div_nc">
+
+        <form class="formulario row pt-5 ml-5 ">
+
+            <div class="form-group col-md-5 ">
+                <label for="fecha-na" class="col-sm-2 col-form-label">Fecha</label>
+                <input type="date" id="fecha-na" class="form-control">
+            </div>
+
+            <div class="form-group col-md-5">
+                <label for="empresa">Empresa</label>
+                <select class="form-control" id="empresa">
+                    <option>Empresa 1</option>
+                    <option>Empresa 2</option>
+                    <option>Empresa 3</option>
+                    <option>Empresa 4</option>
+                    <option>Empresa 5</option>
+                </select>
+            </div>
+
+
+            <div class="form-group col-md-5">
+                <label for="ley">Ley</label>
+                <input type="text" class="form-control" id="nombre" aria-describedby="nombre">
+            </div>
+
+            <div class="form-group col-md-5">
+                <label for="gramo">Vr-Gramo</label>
+                <input type="text" class="form-control" id="gramo" aria-describedby="gramo">
+            </div>
+
+
+            <div class="form-group col-md-10">
+                <label for="nota">Nota</label>
+                <textarea class="form-control" id="nota" rows="3"></textarea>
+            </div>
+
+            <a href="AgrupacionCompra.html" class="btn btn-success  col-md-5">Guardar</a>
+            <button type="submit" class="btn btn-secondary col-md-5 ml-3">Cancelar</button>
+
+        </form>
+
+    </div>
+
+
+
+</body>
+
+</html>

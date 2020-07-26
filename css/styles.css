@@ -1,0 +1,44 @@
+.foto{
+    height: 300px;
+    margin: 10px;
+}
+
+.huella{
+    margin-top: 30px;
+    height: 150px;
+    margin: 10px;
+}
+
+.center_div{
+    margin: 0 auto;
+    width:80%;
+    margin-left: 260px;
+}
+
+.center_div_nc{
+    margin: 0 auto;
+    width:80%;
+    margin-left: 210px;
+}
+
+.foto{
+    background-image:url(foto_opt.png);
+    background-repeat:no-repeat;
+    height:100px;
+    width:100px;
+    padding: 0px;
+    margin: 0px;
+    height:40px;
+    width:40px;
+    background-position:center;
+  }
+
+  .huella{
+    background-image:url(huella_opt.png);
+    background-repeat:no-repeat;
+    height:40px;
+    width:40px;
+    padding: 0px;
+    margin: 0px;
+    background-position:center;
+  }
