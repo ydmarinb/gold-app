@@ -53,7 +53,6 @@ def nuevo_cliente():
                       apellidos=apellidos, telefono=telefono, direccion=direccion,
                       municipioRucom=municipio, email=email)
 
-
     db.session.add(cliente)
     db.session.commit()
     return 'recibido'
@@ -187,6 +186,35 @@ def nueva_compra():
 
 
 ###############################################
+# Consultar compra
+################################################
+@app.route('/consultar-compra/<int:idCompra>', endpoint='consultar_compra')
+def consultar_compra(idCompra):
+    compras = Compra.query.join(Empresa, Compra.idEmpresa == Empresa.nit) \
+        .add_columns(Compra.fechaCompra,
+                     Compra.nota, Compra.idCompra,
+                     Empresa.nombreEmpresaRucom, Compra.vrGramo,
+                     Compra.idEmpresa, Compra.ley,
+                     Compra.vrGramo, Compra.idEmpleado). \
+        filter(Compra.idCompra == idCompra)
+    compra = {}
+    lista_compra = []
+    for c in compras:
+        compra['idCompra'] = c.idCompra
+        compra['empresa'] = c.nombreEmpresaRucom
+        compra['fecha'] = c.fechaCompra
+        compra['nota'] = c.nota
+        compra['gramos'] = c.vrGramo
+        compra['idEmpresa'] = c.idEmpresa
+        compra['ley'] = c.ley
+        compra['vrGramo'] = c.vrGramo
+        compra['idEmpleado'] = c.idEmpleado
+        lista_compra.append(compra)
+        compra = {}
+    return jsonify(lista_compra)
+
+
+###############################################
 # listar Compras
 ################################################
 
@@ -194,15 +222,19 @@ def nueva_compra():
 def lista_compras():
     compras = Compra.query.join(Empresa, Compra.idEmpresa == Empresa.nit) \
         .add_columns(Compra.fechaCompra,
-                     Compra.nota, Empresa.nombreEmpresaRucom).filter(Compra.estadoCompra == "abierto")
-    compra = {'fecha': [], 'empresa': [], 'nota': []}
-
+                     Compra.nota, Empresa.nombreEmpresaRucom, Compra.idCompra, Compra.estadoCompra). \
+        filter(Compra.estadoCompra == "abierto")
+    compra = {}
+    lista_compras = []
     for c in compras:
-        compra['fecha'].append(c.fechaCompra)
-        compra['empresa'].append(c.nombreEmpresaRucom)
-        compra['nota'].append(c.nota)
-
-    return compra
+        compra['idCompra'] = c.idCompra
+        compra['estadoCompra'] = c.estadoCompra
+        compra['fecha'] = c.fechaCompra
+        compra['empresa'] = c.nombreEmpresaRucom
+        compra['nota'] = c.nota
+        lista_compras.append(compra)
+        compra = {}
+    return jsonify(lista_compras)
 
 
 ###############################################
@@ -238,6 +270,51 @@ def cliente_compra():
 
 
 ###############################################
+# Tota gramos
+################################################
+@app.route('/suma-gramos/<int:idCompra_>', methods=['GET'], endpoint='suma_gramos')
+def suma_gramos(idCompra_):
+    detalle_compra = detalleCompra.query.join(Cliente, detalleCompra.idCliente == Cliente.cedula) \
+        .join(Compra, detalleCompra.idCompra == Compra.idCompra) \
+        .add_columns(detalleCompra.gramos). \
+        filter(Compra.idCompra == idCompra_)
+    detalle = {}
+    lista = []
+    suma = 0
+    for c in detalle_compra:
+        suma += c.gramos
+    detalle['suma_gramos'] = suma
+    lista.append(detalle)
+    return jsonify(lista)
+
+
+###############################################
+# Editar Compra
+################################################
+@app.route('/editar-compra/<int:idCompra>', methods=['PUT'], endpoint='editar_compra')
+def editar_compra(idCompra):
+    compra = Compra().query.get(idCompra)
+
+    fechaCompra = request.json['fechaCompra']
+    idEmpresa = request.json['idEmpresa']
+    ley = request.json['ley']
+    nota = request.json['nota']
+    vrGramo = request.json['vrGramo']
+    estadoCompra = request.json['estadoCompra']
+    idEmpleado = request.json['idEmpleado']
+
+    compra.fechaCompra = fechaCompra
+    compra.idEmpresa = idEmpresa
+    compra.ley = ley
+    compra.nota = nota
+    compra.vrGramo = vrGramo
+    compra.estadoCompra = estadoCompra
+    compra.idEmpleado = idEmpleado
+    db.session.commit()
+    return 'recibido'
+
+
+###############################################
 # Listas clientes en compra
 ################################################
 @app.route('/lista-cliente-compra/<int:idCompra_>', methods=['GET'], endpoint='lista_cliente_compra')
@@ -245,18 +322,23 @@ def lista_cliente_compra(idCompra_):
     detalle_compra = detalleCompra.query.join(Cliente, detalleCompra.idCliente == Cliente.cedula) \
         .join(Compra, detalleCompra.idCompra == Compra.idCompra) \
         .add_columns(Compra.fechaCompra, Compra.idCompra, Cliente.cedula,
-                     Cliente.nombres, Cliente.apellidos, detalleCompra.gramos). \
+                     Cliente.nombres, Cliente.apellidos,
+                     detalleCompra.gramos, detalleCompra.foto, detalleCompra.huella). \
         filter(Compra.idCompra == idCompra_)
-    detalle = {'fecha': [], 'cedula': [], 'no_doc': [], 'nombres': [],
-               'apellidos': [], 'gramos': []}
+    lista_clientes = []
+    detalle = {}
     for c in detalle_compra:
-        detalle['fecha'].append(c.fechaCompra)
-        detalle['no_doc'].append(c.idCompra)
-        detalle['cedula'].append(c.cedula)
-        detalle['nombres'].append(c.nombres)
-        detalle['apellidos'].append(c.apellidos)
-        detalle['gramos'].append(c.gramos)
-    return detalle
+        detalle['fecha'] = c.fechaCompra
+        detalle['no_doc'] = c.idCompra
+        detalle['cedula'] = c.cedula
+        detalle['nombres'] = c.nombres
+        detalle['apellidos'] = c.apellidos
+        detalle['gramos'] = c.gramos
+        detalle['foto'] = c.foto
+        detalle['huella'] = c.huella
+        lista_clientes.append(detalle)
+        detalle = {}
+    return jsonify(lista_clientes)
 
 
 ###############################################
