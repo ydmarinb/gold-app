@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 from urllib import response
@@ -8,6 +9,7 @@ from database import db
 from models import Cliente, Compra, detalleCompra, Empresa
 import re
 from flask_cors import CORS
+import requests
 
 app = Flask(__name__)
 
@@ -73,6 +75,8 @@ def buscar_cliente(cedula):
     personas['telefono'] = cliente.telefono
     personas['direccion'] = cliente.direccion
     personas['municipio'] = cliente.municipioRucom
+    personas['email'] = cliente.email
+    personas['ciudad_expedicion'] = cliente.ciudadExpedicion
     lista_cliente.append(personas)
     return jsonify(lista_cliente)
 
@@ -163,6 +167,24 @@ def lista_empresas():
         empresa = {}
     return jsonify(lista_empresas)
 
+###############################################
+# lista empresas
+################################################
+@app.route('/lista-compras', methods=['GET'], endpoint='lista_compra')
+def lista_compras():
+    compras = Compra.query.add_columns(Compra.idCompra,
+                                       Compra.nota, Compra.fechaCompra, Compra.estadoCompra).all()
+    compra = {}
+    lista_compras = []
+    for c in range(len(compras)):
+        compra['idCompra'] = compras[c].idCompra
+        compra['nota'] = compras[c].nota
+        compra['fechaCompra'] = compras[c].fechaCompra
+        compra['estadoCompra'] = compras[c].estadoCompra
+        lista_compras.append(compra)
+        compra = {}
+    return jsonify(lista_compras)
+
 
 ###############################################
 # Agregar nueva compra
@@ -218,8 +240,8 @@ def consultar_compra(idCompra):
 # listar Compras
 ################################################
 
-@app.route('/lista-compras', endpoint='lista_compras')
-def lista_compras():
+@app.route('/lista-agrupada', endpoint='lista_agrupada')
+def lista_agrupada():
     compras = Compra.query.join(Empresa, Compra.idEmpresa == Empresa.nit) \
         .add_columns(Compra.fechaCompra,
                      Compra.nota, Empresa.nombreEmpresaRucom, Compra.idCompra, Compra.estadoCompra). \
@@ -323,7 +345,8 @@ def lista_cliente_compra(idCompra_):
         .join(Compra, detalleCompra.idCompra == Compra.idCompra) \
         .add_columns(Compra.fechaCompra, Compra.idCompra, Cliente.cedula,
                      Cliente.nombres, Cliente.apellidos,
-                     detalleCompra.gramos, detalleCompra.foto, detalleCompra.huella). \
+                     detalleCompra.gramos, detalleCompra.foto,
+                     detalleCompra.huella, detalleCompra.idDetalle). \
         filter(Compra.idCompra == idCompra_)
     lista_clientes = []
     detalle = {}
@@ -336,9 +359,12 @@ def lista_cliente_compra(idCompra_):
         detalle['gramos'] = c.gramos
         detalle['foto'] = c.foto
         detalle['huella'] = c.huella
+        detalle['idDetalle'] = c.idDetalle
         lista_clientes.append(detalle)
         detalle = {}
     return jsonify(lista_clientes)
+
+
 
 
 ###############################################
@@ -350,19 +376,84 @@ def lista_cliente_compra(idCompra_):
 ################################################
 
 ###############################################
+# Listar todos los cliente compra
+################################################
+@app.route('/lista-cliente-compra-total', methods=['GET'], endpoint='lista_cliente_compra_total')
+def lista_cliente_compra_total():
+    detalle_compra = detalleCompra.query.join(Cliente, detalleCompra.idCliente == Cliente.cedula) \
+        .join(Compra, detalleCompra.idCompra == Compra.idCompra) \
+        .add_columns(Compra.fechaCompra, Compra.idCompra, Cliente.cedula,
+                     Cliente.nombres, Cliente.apellidos,
+                     detalleCompra.gramos, Compra.vrGramo, detalleCompra.idDetalle).all()
+    lista_clientes = []
+    detalle = {}
+    for c in detalle_compra:
+        detalle['fecha'] = c.fechaCompra
+        detalle['no_doc'] = c.idCompra
+        detalle['cedula'] = c.cedula
+        detalle['nombres'] = c.nombres
+        detalle['apellidos'] = c.apellidos
+        detalle['gramos'] = c.gramos
+        detalle['vrGramo'] = c.vrGramo
+        detalle['idDetalle'] = c.idDetalle
+        lista_clientes.append(detalle)
+        detalle = {}
+    return jsonify(lista_clientes)
+
+###############################################
+# Lista empresas
+################################################
+
+
+###############################################
+# Listar clientes compra busqueda
+################################################
+@app.route('/lista-cliente-compra-busqueda', methods=['GET'], endpoint='lista_cliente_compra_busqueda')
+def lista_cliente_compra_busqueda():
+    detalle_compra = Compra.query.\
+        join(Empresa, Compra.idEmpresa == Empresa.nit)\
+        .add_columns(Compra.fechaCompra, Empresa.nombreEmpresaRucom,
+                     Cliente.municipioRucom, Compra.nota)
+
+    lista_clientes = []
+    detalle = {}
+    for c in detalle_compra:
+        detalle['fecha'] = c.fechaCompra
+        detalle['nombreEmpresaRucom'] = c.nombreEmpresaRucom
+        detalle['municipioRucom'] = c.municipioRucom
+        detalle['nota'] = c.nota
+        lista_clientes.append(detalle)
+        detalle = {}
+    return jsonify(lista_clientes)
+
+###############################################
+# Buscar detalle compra
+################################################
+@app.route('/buscar-detalle/<int:idDetalle>', endpoint='buscar_detalle')
+def buscar_detalle(idDetalle):
+    detalle = detalleCompra.query.get_or_404(idDetalle)
+    detalles = {}
+    lista_detalle = []
+    detalles['idCliente'] = detalle.idCliente
+    detalles['gramos'] = detalle.gramos
+    detalles['idCompra'] = detalle.idCompra
+    lista_detalle.append(detalles)
+    return jsonify(lista_detalle)
+
+###############################################
 # Editar  cliente compra
 ################################################
 
-@app.route('/editar-cliente-compra/<int:cedula>', methods=['PUT'], endpoint='editar_cliente_compra')
-def editar_cliente_compra(cedula):
-    detalle_compra = detalleCompra().query.get()
-    cedula = request.json['cedula']
-    nombres = request.json['nombres']
-    apellidos = request.json['apellidos']
+@app.route('/editar-cliente-compra/<int:idDetalle>', methods=['PUT'], endpoint='editar_cliente_compra')
+def editar_cliente_compra(idDetalle):
+    detalle_compra = detalleCompra().query.get(idDetalle)
+    cedula = request.json['idCliente']
+    #nombres = request.json['nombres']
+    #apellidos = request.json['apellidos']
     gramos = request.json['gramos']
-    detalle_compra.cedula = cedula
-    detalle_compra.nombres = nombres
-    detalle_compra.apellidos = apellidos
+    detalle_compra.idCliente = cedula
+    #detalle_compra.nombres = nombres
+    #detalle_compra.apellidos = apellidos
     detalle_compra.gramos = gramos
     db.session.commit()
     return 'recibido'
@@ -386,101 +477,92 @@ def eliminar_cliente_compra(cedula, idCompra):
 ###############################################
 # Buscar Cliente Compra
 ################################################
-@app.route("/bucar-cliente-compra/<parametro>", endpoint='bucar_cliente_compra')
-def bucar_cliente_compra(parametro=None):
+@app.route("/buscar-cliente-compra/<parametro>", endpoint='bucar_cliente_compra')
+def bucar_cliente_compra(parametro):
     nombre_empresa = []
     empresa = Empresa.query.all()
     for e in empresa:
         nombre_empresa.append(e.nombreEmpresaRucom)
 
     if re.search("[0-9]{5,}", parametro) is not None:
+        print('cedula')
         detalle_compra = detalleCompra.query. \
             join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
             add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, Cliente.apellidos, detalleCompra.estadoCedula, detalleCompra.rut,
-                        detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
+                        Cliente.nombres, Cliente.apellidos,
+                        detalleCompra.estadoCedula, detalleCompra.gramos,
+                        Compra.idCompra). \
             filter(Cliente.cedula == int(parametro)).all()
 
-    elif re.search("[0-9]{4}\-[0-9]{2}\-[0-9]{2}", parametro) is not None:
+    # fecha
+    elif re.search("[0-9]+-[0-9]+-[0-9]+", parametro) is not None:
+        print('fecha')
         detalle_compra = detalleCompra.query. \
             join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
             add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, Cliente.apellidos, detalleCompra.estadoCedula, detalleCompra.rut,
-                        detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
+                        Cliente.nombres, Cliente.apellidos,
+                        detalleCompra.estadoCedula, detalleCompra.gramos,
+                        Compra.idCompra). \
             filter(Compra.fechaCompra == parametro).all()
 
     elif parametro in nombre_empresa:
+        print('empresa')
         detalle_compra = detalleCompra.query. \
             join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
             join(Empresa, Compra.idEmpresa == Empresa.nit). \
             add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, Cliente.apellidos, detalleCompra.estadoCedula, detalleCompra.rut,
-                        detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
+                        Cliente.nombres, Cliente.apellidos,
+                        detalleCompra.estadoCedula, detalleCompra.gramos,
+                        Compra.idCompra). \
             filter(Empresa.nombreEmpresaRucom == parametro).all()
 
-    elif re.search("[a-zA-Z]+", parametro) is not None:
+    # municipio
+    elif re.search("^[a-zA-Z] ?", parametro) is not None:
+        print('municipio')
         detalle_compra = detalleCompra.query. \
             join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
             join(Empresa, Compra.idEmpresa == Empresa.nit). \
             add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, Cliente.apellidos, detalleCompra.estadoCedula, detalleCompra.rut,
-                        detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
+                        Cliente.nombres, Cliente.apellidos,
+                        detalleCompra.estadoCedula, detalleCompra.gramos,
+                        Compra.idCompra). \
             filter(Empresa.municipioRucom == parametro).all()
 
-    elif re.search("[0-9]+-[0-9]+-[0-9]+ [a-zA-Z]+", parametro) is not None:
+    # nota compra
+    elif re.search("[0-9]+,?\.?[0-9]* ?[a-zA-Z]?", parametro) is not None:
+        print('nota')
         detalle_compra = detalleCompra.query. \
             join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
             add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, Cliente.apellidos, detalleCompra.estadoCedula, detalleCompra.rut,
-                        detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
-            filter(Compra.idCompra == parametro).all()
-    """
-    elif re.search("[0-9]{4}-[0-9]{2}-[0-9]{2}", parametro1) is not None and re.search("^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-                                                                                       parametro2) is not None:
-        detalle_compra = detalleCompra.query. \
-            join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
-            join(Compra, detalleCompra.idCompra == Compra.idCompra). \
-            add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, detalleCompra.estadoCedula, detalleCompra.rut,
-                        detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
-            filter(Compra.fechaCompra >= parametro1, Compra.fechaCompra <= parametro2).all()
-    """
-    detalle = {'fecha': [], 'cedula': [], 'nombres': [],
-               'estado_cedula': [], 'rut': [],
-               'judiciales': [], 'procuraduria': [], 'contraloria': [], 'ofac': []}
+                        Cliente.nombres, Cliente.apellidos,
+                        detalleCompra.gramos, Compra.idCompra). \
+            filter(Compra.nota == parametro).all()
+
+    lista = []
+    detalle = {}
 
     for c in detalle_compra:
-        detalle['fecha'].append(c.fechaCompra)
-        detalle['cedula'].append(c.cedula)
-        detalle['nombres'].append(c.nombres + c.apellidos)
-        detalle['estado_cedula'].append(c.estadoCedula)
-        detalle['rut'].append(c.rut)
-        detalle['judiciales'].append(c.antecedentesJuidiciales)
-        detalle['procuraduria'].append(c.procuraduria)
-        detalle['contraloria'].append(c.contraloria)
-        detalle['ofac'].append(c.ofac)
+        detalle['fecha'] = c.fechaCompra
+        detalle['cedula'] = c.cedula
+        detalle['nombres'] = c.nombres
+        detalle['apellidos'] = c.apellidos
+        detalle['gramos'] = c.gramos
+        detalle['idCompra'] = c.idCompra
+        lista.append(detalle)
+        detalle = {}
+    return jsonify(lista)
 
-    return detalle
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
 
 
 ###############################################
 # vigencia cedula
 ################################################
+
 
 ###############################################
 # Estado Rut
@@ -508,92 +590,136 @@ if __name__ == "__main__":
 
 
 @app.route("/documentos-compra/<parametro>", endpoint='documentos_compra')
-@app.route('/documentos-compra/<parametro1>/<parametro2>', endpoint='documentos_compra')
 def documentos_compra(parametro=None, parametro1=None, parametro2=None):
+
+    def cedula(cedula):
+        url = "https://api.misdatos.com.co/api/co/consultarNombres"
+        payload = 'documentType=CC&documentNumber={}'.format(cedula)
+        headers = {
+            'Authorization': 'm7mu5ch2rg1jkywr1h0069g512rbmpq66pn3at0k289iadii',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload)
+        respuesta = json.loads(response.text.encode('utf8'))['statusDescription']
+
+        if respuesta ==  "Hemos encontrado la información que estás consultando":
+            r = 'Cedula activa'
+        else:
+            r = 'Cedula no encontrada'
+        return r
+
+
     nombre_empresa = []
     empresa = Empresa.query.all()
     for e in empresa:
         nombre_empresa.append(e.nombreEmpresaRucom)
 
     if re.search("[0-9]{5,}", parametro) is not None:
+        p = 'cedula'
+        print(p)
         detalle_compra = detalleCompra.query. \
             join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
             add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, Cliente.apellidos, detalleCompra.estadoCedula, detalleCompra.rut,
+                        Cliente.nombres, Cliente.apellidos,
+                        detalleCompra.estadoCedula, detalleCompra.gramos,
                         detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
-            filter(Cliente.cedula == int(parametro)).all()
+                        detalleCompra.contraloria, detalleCompra.ofac, detalleCompra.rut). \
+            filter(Cliente.cedula == int(parametro)).first()
 
-    elif re.search("[0-9]{4}\-[0-9]{2}\-[0-9]{2}", parametro) is not None:
+
+
+
+    # fecha
+    elif re.search("[0-9]+-[0-9]+-[0-9]+", parametro) is not None:
+        p = 'fecha'
+        print(p)
         detalle_compra = detalleCompra.query. \
             join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
-            add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, Cliente.apellidos, detalleCompra.estadoCedula, detalleCompra.rut,
+            aadd_columns(Compra.fechaCompra, Cliente.cedula,
+                        Cliente.nombres, Cliente.apellidos,
+                        detalleCompra.estadoCedula, detalleCompra.gramos,
                         detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
+                        detalleCompra.contraloria, detalleCompra.ofac, detalleCompra.rut). \
             filter(Compra.fechaCompra == parametro).all()
 
     elif parametro in nombre_empresa:
+        p = 'empresa'
+        print(p)
         detalle_compra = detalleCompra.query. \
             join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
             join(Empresa, Compra.idEmpresa == Empresa.nit). \
             add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, Cliente.apellidos, detalleCompra.estadoCedula, detalleCompra.rut,
+                        Cliente.nombres, Cliente.apellidos,
+                        detalleCompra.estadoCedula, detalleCompra.gramos,
                         detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
+                        detalleCompra.contraloria, detalleCompra.ofac, detalleCompra.rut). \
             filter(Empresa.nombreEmpresaRucom == parametro).all()
 
-    elif re.search("[a-zA-Z]+", parametro) is not None:
+    # municipio
+    elif re.search("^[a-zA-Z] ?", parametro) is not None:
+        p ='municipio'
+        print(p)
         detalle_compra = detalleCompra.query. \
             join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
             join(Empresa, Compra.idEmpresa == Empresa.nit). \
             add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, Cliente.apellidos, detalleCompra.estadoCedula, detalleCompra.rut,
+                        Cliente.nombres, Cliente.apellidos,
+                        detalleCompra.estadoCedula, detalleCompra.gramos,
                         detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
+                        detalleCompra.contraloria, detalleCompra.ofac, detalleCompra.rut).\
             filter(Empresa.municipioRucom == parametro).all()
 
-    elif re.search("[0-9]+-[0-9]+-[0-9]+ [a-zA-Z]+", parametro) is not None:
+    # nota compra
+    elif re.search("[0-9]+,?\.?[0-9]* ?[a-zA-Z]?", parametro) is not None:
+        p ='nota'
+        print(p)
         detalle_compra = detalleCompra.query. \
             join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
             add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, Cliente.apellidos, detalleCompra.estadoCedula, detalleCompra.rut,
+                        Cliente.nombres, Cliente.apellidos,
+                        detalleCompra.estadoCedula, detalleCompra.gramos,
                         detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
-            filter(Compra.idCompra == parametro).all()
-    """
-    elif re.search("[0-9]{4}-[0-9]{2}-[0-9]{2}", parametro1) is not None and re.search("^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-                                                                                       parametro2) is not None:
-        detalle_compra = detalleCompra.query. \
-            join(Cliente, detalleCompra.idCliente == Cliente.cedula). \
-            join(Compra, detalleCompra.idCompra == Compra.idCompra). \
-            add_columns(Compra.fechaCompra, Cliente.cedula,
-                        Cliente.nombres, detalleCompra.estadoCedula, detalleCompra.rut,
-                        detalleCompra.antecedentesJuidiciales, detalleCompra.procuraduria,
-                        detalleCompra.contraloria, detalleCompra.ofac). \
-            filter(Compra.fechaCompra >= parametro1, Compra.fechaCompra <= parametro2).all()
-    """
-    detalle = {'fecha': [], 'cedula': [], 'nombres': [],
-               'estado_cedula': [], 'rut': [],
-               'judiciales': [], 'procuraduria': [], 'contraloria': [], 'ofac': []}
+                        detalleCompra.contraloria, detalleCompra.ofac, detalleCompra.rut). \
+            filter(Compra.nota == parametro).all()
 
-    for c in detalle_compra:
-        detalle['fecha'].append(c.fechaCompra)
-        detalle['cedula'].append(c.cedula)
-        detalle['nombres'].append(c.nombres + c.apellidos)
-        detalle['estado_cedula'].append(c.estadoCedula)
-        detalle['rut'].append(c.rut)
-        detalle['judiciales'].append(c.antecedentesJuidiciales)
-        detalle['procuraduria'].append(c.procuraduria)
-        detalle['contraloria'].append(c.contraloria)
-        detalle['ofac'].append(c.ofac)
 
-    return detalle
+    if p == "cedula":
+        detalle = {}
+        lista = []
+        detalle['fecha'] = detalle_compra.fechaCompra
+        detalle['cedula'] = detalle_compra.cedula
+        detalle['nombres'] = detalle_compra.nombres + " " + detalle_compra.apellidos
+        detalle['estadoCedula'] = cedula(detalle_compra.cedula)
+        detalle['antecedentesJuidiciales'] = detalle_compra.antecedentesJuidiciales
+        detalle['procuraduria'] = detalle_compra.procuraduria
+        detalle['contraloria'] = detalle_compra.contraloria
+        detalle['ofac'] = detalle_compra.ofac
+        detalle['rut'] = detalle_compra.rut
+        lista.append(detalle)
+
+
+    else:
+        detalle = {}
+        lista = []
+        for c in detalle_compra:
+            detalle['fecha'] = c.fechaCompra
+            detalle['cedula'] = c.cedula
+            detalle['nombres'] = c.nombres+" "+c.apellidos
+            detalle['estadoCedula'] = cedula(c.cedula)
+            detalle['antecedentesJuidiciales'] = c.antecedentesJuidiciales
+            detalle['procuraduria'] = c.procuraduria
+            detalle['contraloria'] = c.contraloria
+            detalle['ofac'] = c.ofac
+            detalle['rut'] = c.rut
+            lista.append(detalle)
+            detalle = {}
+
+    return jsonify(lista)
 
 
 if __name__ == "__main__":
