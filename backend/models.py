@@ -63,4 +63,5 @@ class detalleCompra(db.Model):
     procuraduria = db.Column(db.String(255))
     contraloria = db.Column(db.String(255))
     ofac = db.Column(db.String(255))
+    vrGramos = db.Column(db.Float)
 

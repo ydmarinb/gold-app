@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime
 from urllib import response
-
+from documentos import *
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from database import db
@@ -10,6 +10,7 @@ from models import Cliente, Compra, detalleCompra, Empresa
 import re
 from flask_cors import CORS
 import requests
+from foto import *
 
 app = Flask(__name__)
 
@@ -97,6 +98,8 @@ def lista_cliente():
         personas['telefono'] = clientes[c].telefono
         personas['direccion'] = clientes[c].direccion
         personas['municipio'] = clientes[c].municipioRucom
+        personas['foto'] = clientes[c].foto
+        personas['huella'] = clientes[c].huella
         lista_clientes.append(personas)
         personas = {}
     return jsonify(lista_clientes)
@@ -136,6 +139,23 @@ def eliminar_cliente(cedula):
 
     db.session.commit()
     return 'recibido'
+
+
+
+###############################################
+# Agregar foto a cliente
+################################################
+@app.route("/foto-cliente/<int:cedula>", endpoint='foto_cliente')
+def foto_cliente(cedula):
+    camara_cliente(cedula)
+
+    cliente = Cliente().query.get(cedula)
+    cliente.foto = 'fh/foto_ingreso/'+str(cedula)+".png"
+    db.session.commit()
+    return 'realizado'
+
+
+
 
 
 ###############################################
@@ -284,8 +304,9 @@ def cliente_compra():
     cedula = request.json['cedula']
     idCompra = request.json['idCompra']
     gramos = request.json['gramos']
+    vrGramos = request.json['vrGramos']
     compra_cliente = detalleCompra(idDetalle=idDetalle, idCliente=cedula, idCompra=idCompra,
-                                   gramos=gramos)
+                                   gramos=gramos, vrGramos=vrGramos)
     db.session.add(compra_cliente)
     db.session.commit()
     return 'recibido'
@@ -346,7 +367,7 @@ def lista_cliente_compra(idCompra_):
         .add_columns(Compra.fechaCompra, Compra.idCompra, Cliente.cedula,
                      Cliente.nombres, Cliente.apellidos,
                      detalleCompra.gramos, detalleCompra.foto,
-                     detalleCompra.huella, detalleCompra.idDetalle). \
+                     detalleCompra.huella, detalleCompra.idDetalle, detalleCompra.vrGramos). \
         filter(Compra.idCompra == idCompra_)
     lista_clientes = []
     detalle = {}
@@ -360,6 +381,7 @@ def lista_cliente_compra(idCompra_):
         detalle['foto'] = c.foto
         detalle['huella'] = c.huella
         detalle['idDetalle'] = c.idDetalle
+        detalle['vrGramos'] = c.vrGramos
         lista_clientes.append(detalle)
         detalle = {}
     return jsonify(lista_clientes)
@@ -370,6 +392,16 @@ def lista_cliente_compra(idCompra_):
 ###############################################
 # Agregar foto en cliente compra
 ################################################
+
+@app.route("/foto-compra/<int:idDetalle>", endpoint='foto_compra')
+def foto_compra(idDetalle):
+    detalle = detalleCompra.query.get(idDetalle)
+    camara_compra(idDetalle)
+    detalle.foto = 'fh/foto_compra/'+str(idDetalle)+".png"
+    db.session.commit()
+    return 'realizado'
+
+
 
 ###############################################
 # Agregar huella en cliente compra
@@ -384,7 +416,7 @@ def lista_cliente_compra_total():
         .join(Compra, detalleCompra.idCompra == Compra.idCompra) \
         .add_columns(Compra.fechaCompra, Compra.idCompra, Cliente.cedula,
                      Cliente.nombres, Cliente.apellidos,
-                     detalleCompra.gramos, Compra.vrGramo, detalleCompra.idDetalle).all()
+                     detalleCompra.gramos, detalleCompra.idDetalle, detalleCompra.vrGramos).all()
     lista_clientes = []
     detalle = {}
     for c in detalle_compra:
@@ -394,7 +426,7 @@ def lista_cliente_compra_total():
         detalle['nombres'] = c.nombres
         detalle['apellidos'] = c.apellidos
         detalle['gramos'] = c.gramos
-        detalle['vrGramo'] = c.vrGramo
+        detalle['vrGramo'] = c.vrGramos
         detalle['idDetalle'] = c.idDetalle
         lista_clientes.append(detalle)
         detalle = {}
@@ -434,9 +466,11 @@ def buscar_detalle(idDetalle):
     detalle = detalleCompra.query.get_or_404(idDetalle)
     detalles = {}
     lista_detalle = []
+    detalles['idDetalle'] = detalle.idDetalle
     detalles['idCliente'] = detalle.idCliente
     detalles['gramos'] = detalle.gramos
     detalles['idCompra'] = detalle.idCompra
+    detalles['vrGramos'] = detalle.vrGramos
     lista_detalle.append(detalles)
     return jsonify(lista_detalle)
 
@@ -448,12 +482,10 @@ def buscar_detalle(idDetalle):
 def editar_cliente_compra(idDetalle):
     detalle_compra = detalleCompra().query.get(idDetalle)
     cedula = request.json['idCliente']
-    #nombres = request.json['nombres']
-    #apellidos = request.json['apellidos']
     gramos = request.json['gramos']
+    vrGramos = request.json['vrGramos']
     detalle_compra.idCliente = cedula
-    #detalle_compra.nombres = nombres
-    #detalle_compra.apellidos = apellidos
+    detalle_compra.vrGramos = vrGramos
     detalle_compra.gramos = gramos
     db.session.commit()
     return 'recibido'
@@ -492,7 +524,8 @@ def bucar_cliente_compra(parametro):
             add_columns(Compra.fechaCompra, Cliente.cedula,
                         Cliente.nombres, Cliente.apellidos,
                         detalleCompra.estadoCedula, detalleCompra.gramos,
-                        Compra.idCompra). \
+                        Compra.idCompra,
+                        detalleCompra.vrGramos, Cliente.telefono). \
             filter(Cliente.cedula == int(parametro)).all()
 
     # fecha
@@ -504,7 +537,8 @@ def bucar_cliente_compra(parametro):
             add_columns(Compra.fechaCompra, Cliente.cedula,
                         Cliente.nombres, Cliente.apellidos,
                         detalleCompra.estadoCedula, detalleCompra.gramos,
-                        Compra.idCompra). \
+                        Compra.idCompra,
+                        detalleCompra.vrGramos, Cliente.telefono). \
             filter(Compra.fechaCompra == parametro).all()
 
     elif parametro in nombre_empresa:
@@ -516,7 +550,8 @@ def bucar_cliente_compra(parametro):
             add_columns(Compra.fechaCompra, Cliente.cedula,
                         Cliente.nombres, Cliente.apellidos,
                         detalleCompra.estadoCedula, detalleCompra.gramos,
-                        Compra.idCompra). \
+                        Compra.idCompra,
+                        detalleCompra.vrGramos, Cliente.telefono). \
             filter(Empresa.nombreEmpresaRucom == parametro).all()
 
     # municipio
@@ -529,8 +564,8 @@ def bucar_cliente_compra(parametro):
             add_columns(Compra.fechaCompra, Cliente.cedula,
                         Cliente.nombres, Cliente.apellidos,
                         detalleCompra.estadoCedula, detalleCompra.gramos,
-                        Compra.idCompra). \
-            filter(Empresa.municipioRucom == parametro).all()
+                        Compra.idCompra, detalleCompra.vrGramos). \
+            filter(Empresa.municipioRucom == parametro, Cliente.telefono).all()
 
     # nota compra
     elif re.search("[0-9]+,?\.?[0-9]* ?[a-zA-Z]?", parametro) is not None:
@@ -540,23 +575,48 @@ def bucar_cliente_compra(parametro):
             join(Compra, detalleCompra.idCompra == Compra.idCompra). \
             add_columns(Compra.fechaCompra, Cliente.cedula,
                         Cliente.nombres, Cliente.apellidos,
-                        detalleCompra.gramos, Compra.idCompra). \
+                        detalleCompra.gramos, Compra.idCompra,
+                        detalleCompra.vrGramos, Cliente.telefono). \
             filter(Compra.nota == parametro).all()
+
 
     lista = []
     detalle = {}
 
     for c in detalle_compra:
+        try:
+            total = c.gramos * c.vrGramos
+        except:
+            total = 0
+        documento_equivalente(c.nombres+" "+c.apellidos, str(c.cedula),
+                              str(c.telefono), str(c.gramos),
+                              str(c.vrGramos), str(c.idCompra), total)
         detalle['fecha'] = c.fechaCompra
         detalle['cedula'] = c.cedula
         detalle['nombres'] = c.nombres
         detalle['apellidos'] = c.apellidos
         detalle['gramos'] = c.gramos
+        detalle['vrGramo'] = c.vrGramos
         detalle['idCompra'] = c.idCompra
         lista.append(detalle)
         detalle = {}
     return jsonify(lista)
 
+###############################################
+# Documento equivalente
+################################################
+@app.route("/documento-equivalente/<int:cedula>", endpoint='documento_equivalente')
+def documento_equivalente_(cedula):
+    abrir_documento_equivalente(cedula)
+    return 'realizado'
+
+###############################################
+# unir documento equivalente
+################################################
+@app.route("/unir-documento-equivalente", endpoint='unir_documento_equivalente')
+def unir_documento_equivalente_():
+    unir_documento_equivalente()
+    return 'realizado'
 
 
 ###############################################
